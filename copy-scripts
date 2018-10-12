@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+SHARED=/data/shared/tomsonlab/scripts
+
+cp ~/bin/{chksub,wrapper} $SHARED
