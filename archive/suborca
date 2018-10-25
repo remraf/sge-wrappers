@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# Description: submit qsub parallel jobs 
+#
+# Note: Use NSLOTS placeholder in <FILE>
+#
+#       Example: %pal nprocs NSLOTS
+#                   end
+#
+##
+
+### User Configuration
+
+EMAIL='4.tonyvo@gmail.com'
+FILE_ERROR='error.log'
+FILE_OUTPUT='output.log'
+MAIL=1
+PE='openmp'
+QUEUE='all.q'
+SCRATCH=/scratch/$USER
+SHELL='/bin/bash'
+WRAPPER='/home/tonyvo/bin/openmp.sh'
+
+########## END USER CONFIGURATION ##########
+
+
+### Main Program ###
+
+PROGRAM='suborca'
+
+usage() {
+	echo $PROGRAM
+	echo "Usage: $PROGRAM [-h] <NSLOTS> <FILE>"
+	exit 0
+}
+
+submit_job() {
+	qsub -N $FILE -pe $PE $SLOTS $WRAPPER	
+}
+
+### Program options
+while getopts :h OPT
+do
+	case $OPT in
+		h)
+			usage
+			;;
+		*)
+			echo "Invalid option: $OPT"
+			exit 1
+			;;
+	esac
+done
+
+if [[ $# != 2 ]]
+then
+	usage
+else
+	SLOTS=$1
+	FILE=$2
+fi
+
+# Create working directory
+WORKING_DIR=${FILE%\.*}.work
+mkdir $WORKING_DIR
+cp -p $FILE $WORKING_DIR
+
+# Update input file for requested slots
+cd $WORKING_DIR
+sed -i "s/NSLOTS/${SLOTS}/" $FILE

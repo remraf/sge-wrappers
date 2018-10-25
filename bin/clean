@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+rm *.{chk,d2e,ges,gbw,hess,int,log,prop,opt,out,Rout,rwf,skr,tmp,xyz} 2> /dev/null
