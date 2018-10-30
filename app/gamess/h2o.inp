@@ -1,0 +1,13 @@
+ $contrl scftyp=rhf runtyp=energy mplevl=2 d5=.t. coord=cart nprint=-5 $end
+ $system mwords=64 timlim=600 $end
+ $basis extfil=.t. gbasis=cc-pvtz $end
+ $guess guess=huckel $end
+ $d5  d5=.t. f7=.t. g9=.t. $end
+ $data
+Water cc-pVTZ single point energy calculation
+Cnv 2
+
+O 8  0.000000  0.000000  0.117613
+H 1  0.000000  0.757348 -0.470450
+H 1  0.000000 -0.757348 -0.470450
+ $end
