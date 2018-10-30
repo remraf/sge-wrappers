@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+#
+# Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <wrapper>
+#
+# Description: wrapper script for qsub job submissions that 
+#              uses local compute node scratch storage
+#
+# 		1. Use NSLOTS placeholder in <FILE>
+#
+#          Example(orca): 
+#                      %pal nprocs NSLOTS
+#          		         end
+#
+#          Example(gaussian): 
+#                      %NProcShared=NSLOTS
+#
+#       2. Add additional files for INPUT and OUTPUT via AUX_INPUT
+#          and AUX_OUTPUT
+#
+# tonyvo 2017.06.13
+#
+#$ -q himem.q
+#$ -cwd
+#$ -S /bin/bash
+#$ -e error.log
+#$ -o output.log
+
+INPUT=$JOB_NAME
+FILE=${INPUT%.*}
+EXTENSION=${INPUT#${FILE}.}
+MATLAB_OPTIONS="-nodisplay -nodesktop -nojvm"
+SCRATCH=/scratch
+
+########## BEGIN USER CUSTOMIZATION ##########
+ 
+AUX_INPUT=()                                      
+AUX_OUTPUT=() 
+MODULES="matlab/R2018a"
+OUTPUT="${FILE}.out"
+PROGRAM=/cm/shared/apps/Matlab/R2018a/bin/matlab
+
+########## END USER CUSTOMIZATION ###########
+
+#/*
+#  
+# FUNCTIONS
+#
+###*/
+
+createScratch() {
+	if [[ ! -d $SCRATCH_DIR ]]
+	then
+		mkdir -p $SCRATCH_DIR
+	fi
+	if [[ ! -f "${SCRATCH_DIR}/${INPUT}" ]]
+	then
+		cp $INPUT ${SCRATCH_DIR}
+		for EXTENSION in "${AUX_INPUT[@]}"
+		do
+			cp ${FILE}.${EXTENSION} $SCRATCH_DIR 2> /dev/null
+		done
+		cd $SCRATCH_DIR
+		sed -i "s/NSLOTS/${NSLOTS}/" $INPUT 	
+	fi	
+}
+
+jobHeader() {
+	date +'%a %d %B %Y %H:%M:%S'
+	echo -n "$JOB_ID "; hostname
+	echo $PWD
+}
+
+loadModules() {
+	source /etc/profile.d/modules.sh
+	module load $MODULES
+}
+
+runProgram() {
+	$PROGRAM $MATLAB_OPTIONS -r $FILE > $OUTPUT
+}
+
+saveOutput() {
+	cp $OUTPUT $WORKING_DIR 
+	for EXTENSION in "${AUX_OUTPUT[@]}"
+	do
+		cp ${FILE}.${EXTENSION} $WORKING_DIR 2> /dev/null
+	done
+	
+	## clean up intermediate files
+	rm -rf $SCRATCH_DIR
+}
+
+setPaths() {
+	SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+	WORKING_DIR=$(pwd)
+}
+
+#/*
+#
+#   MAIN
+#
+###*/
+
+loadModules
+setPaths
+jobHeader
+createScratch
+runProgram
+saveOutput
