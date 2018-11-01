@@ -1,41 +1,45 @@
 #!/usr/bin/env bash
 #
-# name: wrap
+# name: wrap.template
 # usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
-# description: wrapper script for sge job submissions using 
+# description: wrapper script for sge job submission using 
 #              local scratch storage
 #
-#   1. Use NSLOTS placeholder rather than explicitly specifying
-#      the number of slots.
+#   1. Specify BINARY (e.g. matlab, g16, python)
+#       Example(R):
+#           BINARY=Rscript
 #
+#   2. Use NSLOTS placeholder rather than explicitly specifying
+#      the number of slots.
 #       Example(orca): 
 #           %pal nprocs NSLOTS
 #           end
 #       Example(gaussian): 
 #           %NProcShared=NSLOTS
 #
-#   2. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
+#   3. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
 #      files with the indicated file extension.
-#
 #       Example(matlab):
-#           AUX_INPUT=(m mat mex)
+#           AUX_OUTPUT=(mat mex)
 #
 # author: tonyvo
 # date: 2017-06-13
 #
-#$ -q all.q
+#$ -q admin.q
 #$ -cwd
 #$ -S /bin/bash
 #$ -e error.log
-#$ -o output.log
+#$ -o job.log
 # -m bea
 # -M <email>
 # -l h_rt=<hh>:<mm>:
 
-INPUT="$JOB_NAME"
+INPUT=$JOB_NAME
 FILE="${INPUT%.*}"
 EXTENSION="${INPUT#${FILE}.}"
-SCRATCH="/scratch"
+SCRATCH=/scratch
+SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
@@ -44,31 +48,31 @@ AUX_OUTPUT=()
 BINARY=<binary>
 MODULES=()
 OUTPUT="${FILE}.out"
-PROGRAM_OPTIONS=()
+PROGRAM_OPTIONS=""
 
 ########### END USER CUSTOMIZATION ###########
 
 #/*
 #  
-# FUNCTIONS
+#  FUNCTIONS
 #
 ###*/
 
 create_job_header() {
     ## create file with job metadata
     date +'%a %d %B %Y %H:%M:%S'
-    echo -n "$JOB_ID "; hostname
-    echo "$WORKING_DIR"
+    echo "$JOB_ID $(hostname)"
+    echo $WORKING_DIR
 }
 
 create_scratch() {
     ## create user scratch directory and populate with program files
-    ([[ -d "$SCRATCH_DIR}" ]] || mkdir -p "$SCRATCH_DIR") &&
-    ([[ -f "${SCRATCH_DIR}/${INPUT}" ]] || cp "$INPUT" "$SCRATCH_DIR") &&
+    ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
+    cp -f $INPUT $SCRATCH_DIR &&
     (
         sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}";
         for EXTENSION in "${AUX_INPUT[@]}"; do
-            cp "*.${EXTENSION}" "$SCRATCH_DIR" 2> /dev/null
+            cp *.${EXTENSION} $SCRATCH_DIR 2> /dev/null
         done
     )
 }
@@ -81,35 +85,29 @@ load_module() {
 }
 
 run_program() {
-    ## run program to perform computations on data
-    $PROGRAM ${PROGRAM_OPTIONS[@]} ${SCRATCH_DIR}/${INPUT} > ${SCRATCH_DIR}/${OUTPUT}
+    ## run program to perform computation on data
+    cd $SCRATCH_DIR
+    $PROGRAM $PROGRAM_OPTIONS $INPUT > $OUTPUT
 }
 
 save_output() {
-    ## copy results from scratch to working directory & clean up scratch
-    cp "${SCRATCH_DIR}/${OUTPUT}" "$WORKING_DIR"
-    for EXTENSION in "${SCRATCH_DIR}/${AUX_OUTPUT[@]}"; do
-        cp ${FILE}.${EXTENSION} $WORKING_DIR 2> /dev/null
+    ## copy results from scratch to working directory
+    cp $OUTPUT $WORKING_DIR
+    for EXTENSION in "${AUX_OUTPUT[@]}"; do
+        cp *.${EXTENSION} $WORKING_DIR 2> /dev/null
     done
 
     ## clean up intermediate files
     rm -rf $SCRATCH_DIR
 }
 
-set_path() {
-    ## define paths to scratch and working directory
-    SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
-    WORKING_DIR=$PWD
-}
-
 #/*
 #
-#   MAIN
+#  MAIN
 #
 ###*/
 
 load_module
-set_path
 create_job_header
 create_scratch
 run_program

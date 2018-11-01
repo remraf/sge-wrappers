@@ -1,109 +1,114 @@
 #!/usr/bin/env bash
 #
-# Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <wrapper>
+# name: wrap-matlabr2018a
+# usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
+# description: wrapper script for sge job submission using 
+#              local scratch storage
 #
-# Description: wrapper script for qsub job submissions that 
-#              uses local compute node scratch storage
+#   1. Specify BINARY (e.g. matlab, g16, python)
+#       Example(R):
+#           BINARY=Rscript
 #
-# 		1. Use NSLOTS placeholder in <FILE>
+#   2. Use NSLOTS placeholder rather than explicitly specifying
+#      the number of slots.
+#       Example(orca): 
+#           %pal nprocs NSLOTS
+#           end
+#       Example(gaussian): 
+#           %NProcShared=NSLOTS
 #
-#          Example(orca): 
-#                      %pal nprocs NSLOTS
-#          		         end
+#   3. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
+#      files with the indicated file extension.
+#       Example(matlab):
+#           AUX_OUTPUT=(mat mex)
 #
-#          Example(gaussian): 
-#                      %NProcShared=NSLOTS
+# author: tonyvo
+# date: 2017-06-13
 #
-#       2. Add additional files for INPUT and OUTPUT via AUX_INPUT
-#          and AUX_OUTPUT
-#
-# tonyvo 2017.06.13
-#
-#$ -q himem.q
+#$ -q admin.q
 #$ -cwd
 #$ -S /bin/bash
 #$ -e error.log
-#$ -o output.log
+#$ -o job.log
+# -m bea
+# -M <email>
+# -l h_rt=<hh>:<mm>:
 
 INPUT=$JOB_NAME
-FILE=${INPUT%.*}
-EXTENSION=${INPUT#${FILE}.}
-MATLAB_OPTIONS="-nodisplay -nodesktop -nojvm"
+FILE="${INPUT%.*}"
+EXTENSION="${INPUT#${FILE}.}"
 SCRATCH=/scratch
+SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
 AUX_INPUT=()                                      
 AUX_OUTPUT=() 
-MODULES="matlab/R2018a"
+BINARY=matlab
+MODULES=(matlab/R2018a)
 OUTPUT="${FILE}.out"
-PROGRAM=/cm/shared/apps/Matlab/R2018a/bin/matlab
+PROGRAM_OPTIONS="-nosplash -nodisplay -nojvm"
 
-########## END USER CUSTOMIZATION ###########
+########### END USER CUSTOMIZATION ###########
 
 #/*
 #  
-# FUNCTIONS
+#  FUNCTIONS
 #
 ###*/
 
-createScratch() {
-	if [[ ! -d $SCRATCH_DIR ]]
-	then
-		mkdir -p $SCRATCH_DIR
-	fi
-	if [[ ! -f "${SCRATCH_DIR}/${INPUT}" ]]
-	then
-		cp $INPUT ${SCRATCH_DIR}
-		for EXTENSION in "${AUX_INPUT[@]}"
-		do
-			cp ${FILE}.${EXTENSION} $SCRATCH_DIR 2> /dev/null
-		done
-		cd $SCRATCH_DIR
-		sed -i "s/NSLOTS/${NSLOTS}/" $INPUT 	
-	fi	
+create_job_header() {
+    ## create file with job metadata
+    date +'%a %d %B %Y %H:%M:%S'
+    echo "$JOB_ID $(hostname)"
+    echo $WORKING_DIR
 }
 
-jobHeader() {
-	date +'%a %d %B %Y %H:%M:%S'
-	echo -n "$JOB_ID "; hostname
-	echo $PWD
+create_scratch() {
+    ## create user scratch directory and populate with program files
+    ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
+    cp -f $INPUT $SCRATCH_DIR &&
+    (
+        sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}";
+        for EXTENSION in "${AUX_INPUT[@]}"; do
+            cp *.${EXTENSION} $SCRATCH_DIR 2> /dev/null
+        done
+    )
 }
 
-loadModules() {
-	source /etc/profile.d/modules.sh
-	module load $MODULES
+load_module() {
+    ## load required modules for computation
+    source /etc/profile.d/modules.sh &&
+    module load "${MODULES[@]}"
+    PROGRAM=$(which $BINARY)
 }
 
-runProgram() {
-	$PROGRAM $MATLAB_OPTIONS -r $FILE > $OUTPUT
+run_program() {
+    ## run program to perform computation on data
+    cd $SCRATCH_DIR
+    $PROGRAM $PROGRAM_OPTIONS -r "$FILE; quit" > ${OUTPUT}
 }
 
-saveOutput() {
-	cp $OUTPUT $WORKING_DIR 
-	for EXTENSION in "${AUX_OUTPUT[@]}"
-	do
-		cp ${FILE}.${EXTENSION} $WORKING_DIR 2> /dev/null
-	done
-	
-	## clean up intermediate files
-	rm -rf $SCRATCH_DIR
-}
+save_output() {
+    ## copy results from scratch to working directory
+    cp $OUTPUT $WORKING_DIR
+    for EXTENSION in "${AUX_OUTPUT[@]}"; do
+        cp *.${EXTENSION} $WORKING_DIR 2> /dev/null
+    done
 
-setPaths() {
-	SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
-	WORKING_DIR=$(pwd)
+    ## clean up intermediate files
+    rm -rf $SCRATCH_DIR
 }
 
 #/*
 #
-#   MAIN
+#  MAIN
 #
 ###*/
 
-loadModules
-setPaths
-jobHeader
-createScratch
-runProgram
-saveOutput
+load_module
+create_job_header
+create_scratch
+run_program
+save_output

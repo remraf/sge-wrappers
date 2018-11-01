@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# name: wrap-matlabr2018a-aux
+# name: wrap-gfortran8
 # usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # description: wrapper script for sge job submission using 
 #              local scratch storage
@@ -44,11 +44,11 @@ WORKING_DIR=$PWD
 ########## BEGIN USER CUSTOMIZATION ##########
  
 AUX_INPUT=()                                      
-AUX_OUTPUT=(testPrint.mat) 
-BINARY=matlab
-MODULES=(matlab/R2018a)
+AUX_OUTPUT=() 
+BINARY=gfortran
+MODULES=(gcc/8.2.0)
 OUTPUT="${FILE}.out"
-PROGRAM_OPTIONS="-nosplash -nodisplay -nojvm"
+PROGRAM_OPTIONS="-L lib -fopenmp -cpp -ffree-line-length-none"
 
 ########### END USER CUSTOMIZATION ###########
 
@@ -71,8 +71,8 @@ create_scratch() {
     cp -f $INPUT $SCRATCH_DIR &&
     (
         sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}";
-        for FILE in "${AUX_INPUT[@]}"; do
-            cp $FILE $SCRATCH_DIR 2> /dev/null
+        for EXTENSION in "${AUX_INPUT[@]}"; do
+            cp *.${EXTENSION} $SCRATCH_DIR 2> /dev/null
         done
     )
 }
@@ -87,14 +87,14 @@ load_module() {
 run_program() {
     ## run program to perform computation on data
     cd $SCRATCH_DIR
-    $PROGRAM $PROGRAM_OPTIONS -r "$FILE; quit" > ${OUTPUT}
+    $PROGRAM $PROGRAM_OPTIONS $INPUT -o ${OUTPUT}
 }
 
 save_output() {
     ## copy results from scratch to working directory
     cp $OUTPUT $WORKING_DIR
-    for FILE in "${AUX_OUTPUT[@]}"; do
-        cp $FILE $WORKING_DIR 2> /dev/null
+    for EXTENSION in "${AUX_OUTPUT[@]}"; do
+        cp *.${EXTENSION} $WORKING_DIR 2> /dev/null
     done
 
     ## clean up intermediate files
