@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# name: wrap-gaussian16
+# name: wrap-python3
 # usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # description: wrapper script for sge job submission using 
 #              local scratch storage
@@ -45,9 +45,9 @@ WORKING_DIR=$PWD
  
 AUX_INPUT=()                                      
 AUX_OUTPUT=() 
-BINARY=g16
-MODULES=(gaussian/16)
-OUTPUT="${FILE}.log"
+BINARY=python
+MODULES=(python/anaconda/3.5)
+OUTPUT="${FILE}.out"
 PROGRAM_OPTIONS=""
 
 ########### END USER CUSTOMIZATION ###########

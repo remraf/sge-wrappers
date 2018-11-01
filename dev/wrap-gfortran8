@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# name: wrap-gaussian16
+# name: wrap-gfortran8
 # usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # description: wrapper script for sge job submission using 
 #              local scratch storage
@@ -45,10 +45,10 @@ WORKING_DIR=$PWD
  
 AUX_INPUT=()                                      
 AUX_OUTPUT=() 
-BINARY=g16
-MODULES=(gaussian/16)
-OUTPUT="${FILE}.log"
-PROGRAM_OPTIONS=""
+BINARY=gfortran
+MODULES=(gcc/8.2.0)
+OUTPUT="${FILE}.out"
+PROGRAM_OPTIONS="-L lib -fopenmp -cpp -ffree-line-length-none"
 
 ########### END USER CUSTOMIZATION ###########
 
@@ -87,7 +87,7 @@ load_module() {
 run_program() {
     ## run program to perform computation on data
     cd $SCRATCH_DIR
-    $PROGRAM $PROGRAM_OPTIONS $INPUT > $OUTPUT
+    $PROGRAM $PROGRAM_OPTIONS $INPUT -o ${OUTPUT}
 }
 
 save_output() {
