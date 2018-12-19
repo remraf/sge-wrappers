@@ -25,7 +25,7 @@
 # author: tonyvo
 # date: 2017-06-13
 #
-#$ -q admin.q
+#$ -q all.q
 #$ -cwd
 #$ -S /bin/bash
 #$ -e error.log
@@ -48,7 +48,7 @@ AUX_OUTPUT=()
 BINARY=gfortran
 MODULES=(gcc/8.2.0)
 OUTPUT="${FILE}.out"
-PROGRAM_OPTIONS="-L lib -fopenmp -cpp -ffree-line-length-none"
+PROGRAM_OPTIONS="-L lib"
 
 ########### END USER CUSTOMIZATION ###########
 

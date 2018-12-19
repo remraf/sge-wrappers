@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
-# name: wrap.template
+# name: wrap-matlabr2018a-dir
 # usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # description: wrapper script for sge job submission using 
-#              local scratch storage
+#              local scratch storage (copying entire working
+#              directory)
 #
 #   1. Specify BINARY (e.g. matlab, g16, python)
 #       Example(R):
@@ -16,11 +17,6 @@
 #           end
 #       Example(gaussian): 
 #           %NProcShared=NSLOTS
-#
-#   3. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
-#      files with the indicated file extension.
-#       Example(matlab):
-#           AUX_OUTPUT=(mat mex)
 #
 # author: tonyvo
 # date: 2017-06-13
@@ -43,12 +39,10 @@ WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
-AUX_INPUT=()                                      
-AUX_OUTPUT=() 
-BINARY=<binary>
-MODULES=()
+BINARY=matlab
+MODULES=(matlab/R2018a)
 OUTPUT="${FILE}.out"
-PROGRAM_OPTIONS=""
+PROGRAM_OPTIONS="-nosplash -nodisplay -nojvm"
 
 ########### END USER CUSTOMIZATION ###########
 
@@ -68,7 +62,8 @@ create_job_header() {
 create_scratch() {
     ## create user scratch directory and populate with program files
     ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
-    cp -f $INPUT $SCRATCH_DIR &&
+    echo -e "\n  ____ rsync _____"
+    rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/ 
     (
         sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}";
         for EXTENSION in "${AUX_INPUT[@]}"; do
@@ -87,15 +82,12 @@ load_module() {
 run_program() {
     ## run program to perform computation on data
     cd $SCRATCH_DIR
-    $PROGRAM $PROGRAM_OPTIONS $INPUT > $OUTPUT
+    $PROGRAM $PROGRAM_OPTIONS -r "$FILE; quit" > ${OUTPUT}
 }
 
 save_output() {
     ## copy results from scratch to working directory
-    cp $OUTPUT $WORKING_DIR
-    for EXTENSION in "${AUX_OUTPUT[@]}"; do
-        cp *.${EXTENSION} $WORKING_DIR 2> /dev/null
-    done
+    rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/ 
 
     ## clean up intermediate files
     rm -rf $SCRATCH_DIR
