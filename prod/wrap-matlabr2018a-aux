@@ -18,9 +18,9 @@
 #           %NProcShared=NSLOTS
 #
 #   3. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
-#      files with the indicated file extension.
+#      files
 #       Example(matlab):
-#           AUX_OUTPUT=(mat mex)
+#           AUX_OUTPUT=(<file1> <file2>)
 #
 # author: tonyvo
 # date: 2017-06-13
