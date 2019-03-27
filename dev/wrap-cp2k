@@ -39,7 +39,7 @@ WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
-BINARY=/usr/global/cp2k/5.1/exe/local/cp2k.popt
+BINARY=cp2k.popt
 MODULES=(openmpi/3.1.3 cp2k/5.1)
 OUTPUT="${FILE}.out"
 PROGRAM_OPTIONS=""
