@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # name: wrap-cp2k
-# usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
+# usage: qsub -pe openmpi <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # description: wrapper script for sge job submission using 
 #              local scratch storage (copying entire working
 #              directory)
