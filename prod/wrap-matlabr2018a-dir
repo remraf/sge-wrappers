@@ -87,7 +87,7 @@ run_program() {
 
 save_output() {
     ## copy results from scratch to working directory
-    rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/ 
+    rsync -vPa ${SCRATCH_DIR}/ ${WORKING_DIR}/ 
 
     ## clean up intermediate files
     rm -rf $SCRATCH_DIR
