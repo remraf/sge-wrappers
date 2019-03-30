@@ -9,18 +9,17 @@
 #       Example(R):
 #           BINARY=Rscript
 #
-#   2. Use NSLOTS placeholder rather than explicitly specifying
+#   2. Specify modules
+#       Example(CP2K)
+#           MODULES=(openmpi/3.1.3 cp2k/5.1)
+#
+#   3. Use NSLOTS placeholder rather than explicitly specifying
 #      the number of slots.
-#       Example(orca): 
+#       Example(orca):
 #           %pal nprocs NSLOTS
 #           end
-#       Example(gaussian): 
+#       Example(gaussian):
 #           %NProcShared=NSLOTS
-#
-#   3. Use AUX_INPUT/AUX_OUTPUT to add additional input/output
-#      files with the indicated file extension.
-#       Example(matlab):
-#           AUX_OUTPUT=(mat mex)
 #
 # author: tonyvo
 # date: 2017-06-13
@@ -43,8 +42,6 @@ WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
-AUX_INPUT=()                                      
-AUX_OUTPUT=() 
 BINARY=g09
 MODULES=(gaussian/09)
 OUTPUT="${FILE}.log"
@@ -68,13 +65,8 @@ create_job_header() {
 create_scratch() {
     ## create user scratch directory and populate with program files
     ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
-    cp -f $INPUT $SCRATCH_DIR &&
-    (
-        sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}";
-        for EXTENSION in "${AUX_INPUT[@]}"; do
-            cp *.${EXTENSION} $SCRATCH_DIR 2> /dev/null
-        done
-    )
+    echo -e "\n  ____ rsync _____"
+    rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/
 }
 
 load_module() {
