@@ -77,7 +77,6 @@ load_module()
     ## load required modules for computation
     source /etc/profile.d/modules.sh &&
     module load "${MODULES[@]}"
-    PROGRAM=$(which $BINARY)
 }
 
 run_program() 
@@ -85,7 +84,7 @@ run_program()
     ## run program to perform computation on data
     cd $SCRATCH_DIR
     sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}"
-    $PROGRAM $PROGRAM_OPTIONS -o $OUTPUT $INPUT
+    $BINARY $PROGRAM_OPTIONS -o $OUTPUT $INPUT
 }
 
 save_output() 
