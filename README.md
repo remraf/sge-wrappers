@@ -6,7 +6,7 @@ A collection of wrappers scripts, customized for specific applications, to submi
 
 Some features of these scripts:
 
-  - simplifies job submission allowing researchers to focus on their research instead of technology
+  - simplifies job submission allowing researchers to focus on research instead of technology
   - employs fast local scratch storage
   - easily modified for new applications
   - customizable behavior
