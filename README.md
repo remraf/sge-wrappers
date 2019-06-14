@@ -2,7 +2,7 @@
 SGE wrapper scripts
 
 ## Description
-A collection of wrappers scripts, customized for specific applications, to submit jobs to an SGE (Sun Grid Engine) scheduler.
+A collection of wrappers scripts, customized to specific applications, for submitting jobs to an SGE (Sun Grid Engine) scheduler.
 
 Some features of these scripts:
 
@@ -12,7 +12,7 @@ Some features of these scripts:
   - customizable behavior
   
 ## Usage
-The general syntax is:
+The syntax is:
 
 ```
 qsub -pe <parallel_environment> <slots> -N <program_file> <wrapper>
