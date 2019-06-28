@@ -1,29 +1,13 @@
 #!/usr/bin/env bash
 #
-# name: wrap.template
-# usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
-# description: wrapper script for sge job submission using 
+# Name: wrap.template
+# Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
+# Description: wrapper script for sge job submission using 
 #              local scratch storage (copying entire working
 #              directory)
 #
-#   1. Specify BINARY (e.g. matlab, g16, python)
-#       Example(R):
-#           BINARY=Rscript
-#
-#   2. Specify modules
-#       Example(CP2K)
-#           MODULES=(openmpi/3.1.3 cp2k/5.1)
-#
-#   3. Use NSLOTS placeholder rather than explicitly specifying
-#      the number of slots.
-#       Example(orca): 
-#           %pal nprocs NSLOTS
-#           end
-#       Example(gaussian): 
-#           %NProcShared=NSLOTS
-#
-# author: tonyvo
-# date: 2017-06-13
+# Author: tony vo
+# Date: 2017-06-13
 #
 # Job Options:
 #$ -q all.q
@@ -37,21 +21,22 @@
 #
 ###*/
 
-INPUT=$JOB_NAME
-FILE="${INPUT%.*}"
-EXTENSION="${INPUT#${FILE}.}"
-SCRATCH=/scratch
-SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
-WORKING_DIR=$PWD
-
 ########## BEGIN USER CUSTOMIZATION ##########
  
 BINARY=<binary>
 MODULES=()
-OUTPUT="${FILE}.out"
+EXTENSION=<extension>
 PROGRAM_OPTIONS=""
 
 ########### END USER CUSTOMIZATION ###########
+
+INPUT=$JOB_NAME
+FILE="${INPUT%.*}"
+FILE_EXTENSION="${INPUT#${FILE}.}"
+OUTPUT="${FILE}.${EXTENSION}"
+SCRATCH=/scratch
+SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+WORKING_DIR=$PWD
 
 #/*
 #  
