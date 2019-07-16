@@ -10,7 +10,7 @@
 # Date: 2017-06-13
 #
 # Job Options:
-#$ -q all.q
+#$ -q short.q
 #$ -cwd
 #$ -S /bin/bash
 #$ -e error.log
