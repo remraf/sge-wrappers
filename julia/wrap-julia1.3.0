@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#
+# Name: wrap.template
+# Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
+# Description: wrapper script for sge job submission using 
+#              local scratch storage (copying entire working
+#              directory)
+#
+# Author: tony vo
+# Date: 2019-02-03
+#
+# Job Options:
+#$ -q admin.q
+#$ -cwd
+#$ -S /bin/bash
+#$ -e error.log
+#$ -o job.log
+# -m bea
+# -M <email>
+# -l h_rt=<hh>:<mm>:
+#
+###*/
+
+########## BEGIN USER CUSTOMIZATION ##########
+ 
+BINARY=julia
+MODULES=(julia/1.3.0)
+EXTENSION=out
+PROGRAM_OPTIONS=""
+
+########### END USER CUSTOMIZATION ###########
+
+INPUT=$JOB_NAME
+FILE="${INPUT%.*}"
+FILE_EXTENSION="${INPUT#${FILE}.}"
+OUTPUT="${FILE}.${EXTENSION}"
+SCRATCH=/scratch
+SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+WORKING_DIR=$PWD
+
+#/*
+#  
+#  FUNCTIONS
+#
+###*/
+
+create_job_header() 
+{
+    ## create file with job metadata
+    date +'%a %d %B %Y %H:%M:%S'
+    echo "$JOB_ID $(hostname)"
+    echo $WORKING_DIR
+}
+
+create_scratch() 
+{
+    ## create user scratch directory and populate with program files
+    ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
+    echo -e "\n  ____ rsync _____"
+    rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/
+}
+
+load_module() 
+{
+    ## load required modules for computation
+    source /etc/profile.d/modules.sh &&
+    module load "${MODULES[@]}"
+}
+
+run_program() 
+{
+    ## run program to perform computation on data
+    cd $SCRATCH_DIR
+    sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}"
+    $BINARY $PROGRAM_OPTIONS $INPUT > $OUTPUT
+}
+
+save_output() 
+{
+    ## copy results from scratch to working directory
+    rsync -vPa --exclude $INPUT ${SCRATCH_DIR}/ ${WORKING_DIR}/
+
+    ## clean up scratch files
+    rm -rf $SCRATCH_DIR
+}
+
+#/*
+#
+#  MAIN
+#
+###*/
+
+load_module
+create_job_header
+create_scratch
+run_program
+save_output
