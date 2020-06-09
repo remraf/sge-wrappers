@@ -5,7 +5,7 @@
 
 ! HF SVP
 
-%pal nprocs 4
+%pal nprocs NSLOTS
      end
 
 * xyz 0 1

@@ -44,7 +44,7 @@ WORKING_DIR=$PWD
 ########## BEGIN USER CUSTOMIZATION ##########
  
 BINARY=orca
-MODULES=(orca/3.0.3 openmpi/gcc)
+MODULES=(orca/3.0.3)
 OUTPUT="${FILE}.out"
 PROGRAM_OPTIONS=""
 
@@ -75,7 +75,7 @@ create_scratch()
 load_module() 
 {
     ## load required modules for computation
-    source /etc/profile.d/modules.sh &&
+    source /etc/profile.d/z00_lmod.sh &&
     module load "${MODULES[@]}"
 }
 
