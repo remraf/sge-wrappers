@@ -43,8 +43,9 @@ WORKING_DIR=$PWD
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
-BINARY=orca
-MODULES=(orca/4.2.1)
+#BINARY=orca
+BINARY=/data/opt/pkgs/orca/orca_4_2_1_linux_x86-64_openmpi314/orca
+MODULES=(orca/4.2.1 mpi/openmpi3-x86_64)
 OUTPUT="${FILE}.out"
 PROGRAM_OPTIONS=""
 
@@ -67,7 +68,7 @@ create_job_header()
 create_scratch() 
 {
     ## create user scratch directory and populate with program files
-    ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
+    ([[ -d $SCRATCH_DIR ]] || mkdir -p $SCRATCH_DIR) &&
     echo -e "\n  ____ rsync _____"
     rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/
 }
