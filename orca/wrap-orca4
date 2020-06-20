@@ -91,7 +91,7 @@ run_program()
 save_output() 
 {
     ## copy results from scratch to working directory
-    rsync -vPa --exclude $INPUT ${SCRATCH_DIR}/ ${WORKING_DIR}/
+    rsync -vPa --exclude "$INPUT" --exclude "*.tmp" ${SCRATCH_DIR}/ ${WORKING_DIR}/
 
     ## clean up scratch files
     rm -rf $SCRATCH_DIR
