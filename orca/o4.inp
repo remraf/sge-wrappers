@@ -1,5 +1,4 @@
 ! RKS BP86 RI SlowConv TightSCF def2-SV(P) def2-SV/J NORMALPRINT 
- 
 
 %pal nprocs NSLOTS
      end
