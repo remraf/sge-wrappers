@@ -25,7 +25,6 @@
 # author: tonyvo
 # date: 2017-06-13
 #
-#$ -q all.q
 #$ -cwd
 #$ -S /bin/bash
 #$ -e error.log
