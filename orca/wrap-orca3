@@ -43,7 +43,7 @@ WORKING_DIR=$PWD
 ########## BEGIN USER CUSTOMIZATION ##########
  
 BINARY=/data/opt/pkgs/orca/orca_3_0_3_linux_x86-64/orca
-MODULES=(orca/3.0.3 mpi/openmpi-x86_64)
+MODULES=(orca/3.0.3 openmpi/1.6.5)
 OUTPUT="${FILE}.out"
 PROGRAM_OPTIONS=""
 
