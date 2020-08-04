@@ -55,7 +55,7 @@ create_job_header()
 create_scratch() 
 {
     ## create user scratch directory and populate with program files
-    ([[ -d $SCRATCH_DIR} ]] || mkdir -p $SCRATCH_DIR) &&
+    ([[ -d $SCRATCH_DIR ]] || mkdir -p $SCRATCH_DIR) &&
     echo -e "\n  ____ rsync _____"
     rsync -vPa ${WORKING_DIR}/ ${SCRATCH_DIR}/
 }
