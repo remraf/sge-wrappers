@@ -6,3 +6,5 @@ for APP in $(ls -d */)
 do
    cp ${APP}/wrap* $DEST_DIR
 done 
+
+cp wrap.template $DEST_DIR
