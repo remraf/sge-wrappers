@@ -1,30 +1,32 @@
 #!/usr/bin/env bash
 #
-# name: wrap-python3
-# usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
-# description: wrapper script for sge job submission using 
-#              local scratch storage (copying entire working
-#              directory)
+# Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
+# Description: wrapper script for sge job submission using 
+#              local scratch storage. Output directed to 
+#              <INPUT_FILE>.<OUTPUT_EXTENSION>
+# Author: tony vo
+# Date: 2017-06-13
 #
 #   1. Specify BINARY (e.g. matlab, g16, python)
-#       Example(R):
-#           BINARY=Rscript
+#        Example R:
 #
 #   2. Specify modules
-#       Example(CP2K)
+#        Example CP2K:
 #           MODULES=(openmpi/3.1.3 cp2k/5.1)
+# 
+#   3. Specify OUTPUT_EXTENSION
+#        Example STATA:
+#           EXTENSION=smcl
 #
-#   3. Use NSLOTS placeholder rather than explicitly specifying
-#      the number of slots.
-#       Example(orca): 
+#   4. Use NSLOTS placeholder rather than explicitly specifying
+#      the number of slots. 
+#        Example orca:
 #           %pal nprocs NSLOTS
 #           end
-#       Example(gaussian): 
+#        Example gaussian:
 #           %NProcShared=NSLOTS
 #
-# author: tonyvo
-# date: 2017-06-13
-#
+# Job Options:
 #$ -q all.q
 #$ -cwd
 #$ -S /bin/bash
@@ -34,31 +36,27 @@
 # -M <email>
 # -l h_rt=<hh>:<mm>:
 
-INPUT=$JOB_NAME
-FILE="${INPUT%.*}"
-EXTENSION="${INPUT#${FILE}.}"
-SCRATCH=/scratch
-SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
-WORKING_DIR=$PWD
-
 ########## BEGIN USER CUSTOMIZATION ##########
  
 BINARY=python
 MODULES=(python/anaconda/3.5)
-OUTPUT="${FILE}.out"
+OUTPUT_EXTENSION=out
 PROGRAM_OPTIONS=""
 
 ########### END USER CUSTOMIZATION ###########
 
-#/*
-#  
-#  FUNCTIONS
-#
-###*/
+INPUT=$JOB_NAME
+FILE="${INPUT%.*}"
+FILE_EXTENSION="${INPUT#${FILE}.}"
+OUTPUT="${FILE}.${OUTPUT_EXTENSION}"
+SCRATCH=/scratch
+SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
+WORKING_DIR=$PWD
+
 
 create_job_header() 
 {
-    ## create file with job metadata
+    ## create log with job metadata
     date +'%a %d %B %Y %H:%M:%S'
     echo "$JOB_ID $(hostname)"
     echo $WORKING_DIR
@@ -79,13 +77,21 @@ load_module()
     module load "${MODULES[@]}"
 }
 
+main()
+{
+    load_module
+    create_job_header
+    create_scratch
+    run_program
+    save_output 
+}
+
 run_program() 
 {
     ## run program to perform computation on data
     cd $SCRATCH_DIR
     sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}"
-    PROGRAM=$(which $BINARY)
-    $PROGRAM $PROGRAM_OPTIONS $INPUT > $OUTPUT
+    $BINARY $PROGRAM_OPTIONS $INPUT > $OUTPUT
 }
 
 save_output() 
@@ -97,14 +103,4 @@ save_output()
     rm -rf $SCRATCH_DIR
 }
 
-#/*
-#
-#  MAIN
-#
-###*/
-
-load_module
-create_job_header
-create_scratch
-run_program
-save_output
+main

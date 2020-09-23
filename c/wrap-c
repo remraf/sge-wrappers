@@ -38,8 +38,8 @@
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
-BINARY=orca
-MODULES=(orca/4.0.2)
+BINARY=gcc
+MODULES=(gcc/8.2.0)
 OUTPUT_EXTENSION=out
 PROGRAM_OPTIONS=""
 
@@ -91,7 +91,7 @@ run_program()
     ## run program to perform computation on data
     cd $SCRATCH_DIR
     sed -i "s/NSLOTS/${NSLOTS}/" "${SCRATCH_DIR}/${INPUT}"
-    $BINARY $PROGRAM_OPTIONS $INPUT > $OUTPUT
+    $BINARY $PROGRAM_OPTIONS -o $OUTPUT $INPUT 
 }
 
 save_output() 
