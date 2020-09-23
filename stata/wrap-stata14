@@ -1,13 +1,30 @@
 #!/usr/bin/env bash
 #
-# Name: wrap-stata14
 # Usage: qsub -pe openmp <SLOTS> -N <INPUT_FILE> <WRAPPER>
 # Description: wrapper script for sge job submission using 
-#              local scratch storage (copying entire working
-#              directory)
-#
+#              local scratch storage. Output directed to 
+#              <INPUT_FILE>.<OUTPUT_EXTENSION>
 # Author: tony vo
 # Date: 2017-06-13
+#
+#   1. Specify BINARY (e.g. matlab, g16, python)
+#        Example R:
+#
+#   2. Specify modules
+#        Example CP2K:
+#           MODULES=(openmpi/3.1.3 cp2k/5.1)
+# 
+#   3. Specify OUTPUT_EXTENSION
+#        Example STATA:
+#           EXTENSION=smcl
+#
+#   4. Use NSLOTS placeholder rather than explicitly specifying
+#      the number of slots. 
+#        Example orca:
+#           %pal nprocs NSLOTS
+#           end
+#        Example gaussian:
+#           %NProcShared=NSLOTS
 #
 # Job Options:
 #$ -q all.q
@@ -18,14 +35,12 @@
 # -m bea
 # -M <email>
 # -l h_rt=<hh>:<mm>:
-#
-###*/
 
 ########## BEGIN USER CUSTOMIZATION ##########
  
 BINARY=stata
 MODULES=(stata/14)
-EXTENSION=smcl
+OUTPUT_EXTENSION=smcl
 PROGRAM_OPTIONS=""
 
 ########### END USER CUSTOMIZATION ###########
@@ -33,20 +48,15 @@ PROGRAM_OPTIONS=""
 INPUT=$JOB_NAME
 FILE="${INPUT%.*}"
 FILE_EXTENSION="${INPUT#${FILE}.}"
-OUTPUT="${FILE}.${EXTENSION}"
+OUTPUT="${FILE}.${OUTPUT_EXTENSION}"
 SCRATCH=/scratch
 SCRATCH_DIR="${SCRATCH}/${USER}/${JOB_ID}"
 WORKING_DIR=$PWD
 
-#/*
-#  
-#  FUNCTIONS
-#
-###*/
 
 create_job_header() 
 {
-    ## create file with job metadata
+    ## create log with job metadata
     date +'%a %d %B %Y %H:%M:%S'
     echo "$JOB_ID $(hostname)"
     echo $WORKING_DIR
@@ -67,6 +77,15 @@ load_module()
     module load "${MODULES[@]}"
 }
 
+main()
+{
+    load_module
+    create_job_header
+    create_scratch
+    run_program
+    save_output 
+}
+
 run_program() 
 {
     ## run program to perform computation on data
@@ -84,14 +103,4 @@ save_output()
     rm -rf $SCRATCH_DIR
 }
 
-#/*
-#
-#  MAIN
-#
-###*/
-
-load_module
-create_job_header
-create_scratch
-run_program
-save_output
+main
